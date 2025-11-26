@@ -1,0 +1,28 @@
+POST http://localhost:4004/odata/v4/z-service-students/addStudent
+Content-Type: application/json
+
+{
+  "student": {
+    "studentID": "STU001",
+    "firstName": "Ravi",
+    "lastName": "Kumar",
+    "gender": "Male",
+    "email": "ravi@example.com",
+    "dateOfBirth": "2005-06-15",
+    "enrollmentDate": "2025-07-01",
+    "course": "B.Tech",
+    "class": "CSE",
+    "section": "A",
+    "phoneNumber": "9876543210",
+    "emergencyContactName": "Sridhar",
+    "emergencyContactPhone": "9980797787",
+    "address": "456 Street",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "postalCode": "500081",
+    "country": "India",
+    "guardianName": "Sridhar",
+    "guardianPhone": "9980797787"
+  }
+}
+
