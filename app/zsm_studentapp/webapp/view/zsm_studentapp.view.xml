@@ -1,0 +1,87 @@
+<mvc:View
+    controllerName="zsmstudentapp.controller.zsm_studentapp"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+
+    <Page
+        id="page"
+        title="Student List">
+
+        <!-- TOP TOOLBAR -->
+        <headerContent>
+            <Toolbar id="mainToolbar">
+
+                <Button
+                    id="btnAdd"
+                    text="Add"
+                    icon="sap-icon://add"
+                    press=".onAdd" />
+
+                <Button
+                    id="btnUpdate"
+                    text="Update"
+                    icon="sap-icon://edit"
+                    press=".onUpdate" />
+
+                <Button
+                    id="btnDelete"
+                    text="Delete"
+                    icon="sap-icon://delete"
+                    press=".onDelete" />
+
+                <ToolbarSpacer id="_IDGenToolbarSpacer" />
+
+                <Button
+                    id="btnRefresh"
+                    icon="sap-icon://refresh"
+                    press=".onRefresh" />
+            </Toolbar>
+        </headerContent>
+
+        <!-- TABLE -->
+        <content>
+            <Table
+                id="studentTable"
+                mode="SingleSelect"
+                items="{/Students}">
+
+                <columns>
+                    <Column id="colID">
+                        <Text id="txtID" text="ID" />
+                    </Column>
+
+                    <Column id="colFirst">
+                        <Text id="txtFirst" text="First Name" />
+                    </Column>
+
+                    <Column id="colLast">
+                        <Text id="txtLast" text="Last Name" />
+                    </Column>
+
+                    <Column id="colClass">
+                        <Text id="txtClass" text="Class" />
+                    </Column>
+
+                    <Column id="colSection">
+                        <Text id="txtSection" text="Section" />
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem id="rowStudent" type="Active">
+                        <cells>
+                            <Text id="cellID" text="{studentID}" />
+                            <Text id="cellFirst" text="{firstName}" />
+                            <Text id="cellLast" text="{lastName}" />
+                            <Text id="cellClass" text="{class}" />
+                            <Text id="cellSection" text="{section}" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+
+            </Table>
+        </content>
+
+    </Page>
+
+</mvc:View>
