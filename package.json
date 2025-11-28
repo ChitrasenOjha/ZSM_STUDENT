@@ -1,5 +1,5 @@
 {
-  "name": "ZSM_STUDSVC",
+  "name": "ZSM_STUDENT",
   "version": "1.0.0",
   "description": "A simple CAP project.",
   "dependencies": {
@@ -12,5 +12,15 @@
   "scripts": {
     "start": "cds-serve"
   },
-  "private": true
+  "private": true,
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "database": "db.sqlite"
+        }
+      }
+    }
+  }
 }

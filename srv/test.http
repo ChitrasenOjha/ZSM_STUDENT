@@ -1,28 +1,56 @@
+### ADD STUDENT
 POST http://localhost:4004/odata/v4/z-service-students/addStudent
 Content-Type: application/json
 
 {
   "student": {
-    "studentID": "STU001",
-    "firstName": "Ravi",
-    "lastName": "Kumar",
-    "gender": "Male",
-    "email": "ravi@example.com",
-    "dateOfBirth": "2005-06-15",
-    "enrollmentDate": "2025-07-01",
-    "course": "B.Tech",
-    "class": "CSE",
-    "section": "A",
+    "studentID": "S1002",
+    "firstName": "Test",
+    "lastName": "Sharma",
+    "class": "10",
+    "section": "B",
+
+    "email": "test@gmail.com",
     "phoneNumber": "9876543210",
-    "emergencyContactName": "Sridhar",
-    "emergencyContactPhone": "9980797787",
-    "address": "456 Street",
-    "city": "Hyderabad",
-    "state": "Telangana",
-    "postalCode": "500081",
-    "country": "India",
-    "guardianName": "Sridhar",
-    "guardianPhone": "9980797787"
+    "emergencyContactName": "Mother",
+    "guardianName": "Raj Sharma",
+    "address": "New Delhi",
+
+    "dateOfBirth": "2007-05-10",
+    "enrollmentDate": "2020-06-15"
   }
 }
 
+
+### DELETE STUDENT
+POST http://localhost:4004/odata/v4/z-service-students/deleteStudent
+Content-Type: application/json
+
+{
+  "student": {
+    "studentID": "S1002"
+  }
+}
+
+
+
+### UPDATE STUDENT
+POST http://localhost:4004/odata/v4/z-service-students/updateStudent
+Content-Type: application/json
+
+{
+  "student": {
+    "studentID": "S1001",
+    "firstName": "Chitrasen",
+    "lastName": "Doe",
+    "class": "10",
+    "section": "A",
+    "email": "john@example.com",
+    "phoneNumber": "9999999999",
+    "emergencyContactName": "Parent",
+    "guardianName": "Father",
+    "address": "Delhi",
+    "dateOfBirth": "2005-01-01",
+    "enrollmentDate": "2020-06-01"
+  }
+}

@@ -1,77 +1,137 @@
-const cds = require('@sap/cds');
+const cds = require("@sap/cds");
 
 module.exports = cds.service.impl(async function () {
 
-    const { Students } = this.entities;  // reference the Students entity
+    const { Students, StudentDetails } = this.entities;
 
-    // Custom action to add a student
     this.on("addStudent", async (req) => {
-
-        // Validate request payload
-        if (!req.data || !req.data.student) {
-            return req.error(400, "Invalid JSON. Expected { student: { ... } } format");
-        }
 
         const data = req.data.student;
 
-        //  Generate UUID for primary key
-        data.sID = cds.utils.uuid();
+        // Required validation
+        if (!data.studentID)
+            return req.error(400, "studentID is required");
 
-        // Convert dates to standard format
-        const convertDate = (d) => {
+        // Check if already exists
+        const exists = await SELECT.one.from(Students).where({
+            studentID: data.studentID
+        });
+
+        if (exists)
+            return req.error(400, `Student '${data.studentID}' already exists`);
+
+        // Convert date (helper)
+        const convertDate = d => {
             if (!d) return null;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-                return `${d}T00:00:00Z`;
-            }
+            if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return `${d}T00:00:00Z`;
             return d;
         };
-        data.dateOfBirth = convertDate(data.dateOfBirth);
-        data.enrollmentDate = convertDate(data.enrollmentDate);
 
-        //  Mandatory field checks
-        if (!data.studentID) return req.error(400, "studentID is required");
-        if (!data.firstName) return req.error(400, "firstName is required");
-        if (!data.lastName) return req.error(400, "lastName is required");
-        if (!data.email) return req.error(400, "email is required");
-        if (!data.course) return req.error(400, "course is required");
+        // Prepare Students entry
+        const studentEntry = {
+            studentID: data.studentID,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            class: data.class,
+            section: data.section
+        };
 
-        //  Format validations
-        if (!/^[A-Za-z0-9]+$/.test(data.studentID)) {
-            return req.error(400, "studentID must be alphanumeric");
-        }
-        if (!/^[A-Za-z ]+$/.test(data.firstName)) {
-            return req.error(400, "firstName must contain only alphabets");
-        }
-        if (!/^[A-Za-z ]+$/.test(data.lastName)) {
-            return req.error(400, "lastName must contain only alphabets");
-        }
-        if (data.phoneNumber && !/^[0-9]{10}$/.test(data.phoneNumber)) {
-            return req.error(400, "phoneNumber must contain 10 digits");
-        }
-        if (data.emergencyContactPhone && !/^[0-9]{10}$/.test(data.emergencyContactPhone)) {
-            return req.error(400, "emergencyContactPhone must contain 10 digits");
-        }
+        // Prepare StudentDetails entry
+        const detailsEntry = {
+            studentID: data.studentID,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            emergencyContactName: data.emergencyContactName,
+            guardianName: data.guardianName,
+            address: data.address,
+            dateOfBirth: convertDate(data.dateOfBirth),
+            enrollmentDate: convertDate(data.enrollmentDate)
+        };
 
-        // Gender validation
-        const validGender = ["Male", "Female", "Other"];
-        if (data.gender && !validGender.includes(data.gender)) {
-            return req.error(400, "Invalid gender");
-        }
-
-        //  Check for duplicate studentID
-        const existing = await SELECT.one.from(Students).where({ studentID: data.studentID });
-        if (existing) {
-            return req.error(400, `Student with studentID '${data.studentID}' already exists`);
-        }
-
-        // Insert into DB
         try {
-            await INSERT.into(Students).entries(data);
-            return `Student with ID ${data.studentID} inserted successfully.`;
+            // Insert parent and child tables
+            await INSERT.into(Students).entries(studentEntry);
+            await INSERT.into(StudentDetails).entries(detailsEntry);
+
+            return `Student '${data.studentID}' created successfully`;
+
         } catch (err) {
             return req.error(500, err.message);
         }
-
     });
 
+    // DELETE STUDENT
+
+    this.on("deleteStudent", async (req) => {
+
+        const { student } = req.data;
+        const studentID = student?.studentID;
+
+        if (!studentID)
+            return req.error(400, "studentID is required");
+
+        try {
+            const exists = await SELECT.one.from(Students).where({ studentID });
+
+            if (!exists)
+                return req.error(400, "Student ID does not exist");
+
+            await DELETE.from(StudentDetails).where({ studentID });
+            await DELETE.from(Students).where({ studentID });
+
+            return `Student '${studentID}' details deleted successfully`;
+
+        } catch (err) {
+            return req.error(500, err.message);
+        }
+    });
+
+    // UPDATE STUDENT
+    this.on("updateStudent", async (req) => {
+
+        const { student } = req.data;          // student comes from req.data.student
+        const studentID = student?.studentID;
+
+        if (!studentID) return req.error(400, "studentID is required");
+
+        const exists = await SELECT.one.from(Students).where({ studentID });
+        if (!exists) return req.error(400, "Student ID does not exist");
+
+        // Convert date helper
+        const convertDate = (d) => {
+            if (!d) return null;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return `${d}T00:00:00Z`;
+            return d;
+        };
+
+        const studentUpdate = {
+            firstName: student.firstName,
+            lastName: student.lastName,
+            class: student.class,
+            section: student.section
+        };
+
+        const detailsUpdate = {
+            email: student.email,
+            phoneNumber: student.phoneNumber,
+            emergencyContactName: student.emergencyContactName,
+            guardianName: student.guardianName,
+            address: student.address,
+            dateOfBirth: convertDate(student.dateOfBirth),
+            enrollmentDate: convertDate(student.enrollmentDate)
+        };
+
+        try {
+            await UPDATE(Students).set(studentUpdate).where({ studentID });
+            await UPDATE(StudentDetails).set(detailsUpdate).where({ studentID });
+
+            return `Student '${studentID}' updated successfully`;
+        } catch (err) {
+            return req.error(500, err.message);
+        }
+    });
+
+
 });
+
+
