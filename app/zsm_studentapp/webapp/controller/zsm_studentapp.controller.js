@@ -9,12 +9,21 @@ sap.ui.define([
             var oSelectedItem = oEvent.getParameter("listItem");
             if (!oSelectedItem) return;
 
-            var oContext = oSelectedItem.getBindingContext(); // context for selected student
+            var oPanel = this.byId("detailPanel");
+
+            // If the same row is clicked and panel is already visible, hide it
+            if (oPanel.getVisible() && this._lastSelectedID === oSelectedItem.getBindingContext().getProperty("studentID")) {
+                oPanel.setVisible(false);
+                this._lastSelectedID = null; // reset last selected
+                return;
+            }
+
+            var oContext = oSelectedItem.getBindingContext();
             var sStudentID = oContext.getProperty("studentID");
+            this._lastSelectedID = sStudentID; // store last clicked row
 
-            var oModel = this.getView().getModel(); // V4 ODataModel
+            var oModel = this.getView().getModel(); // V4 OData model
 
-            // Create a temporary context with expand
             var oDetailContext = oModel.bindContext("/Students('" + sStudentID + "')", undefined, {
                 $$groupId: "$auto",
                 $expand: "details"
@@ -28,10 +37,11 @@ sap.ui.define([
                 this.byId("detailClass").setText("Class: " + oResult.class);
                 this.byId("detailSection").setText("Section: " + oResult.section);
 
+                // Format date helper
                 function formatDate(sISODate) {
                     if (!sISODate) return "";
                     var oDate = new Date(sISODate);
-                    return oDate.toLocaleDateString(); // yyyy-mm-dd or locale format
+                    return oDate.toLocaleDateString();
                 }
 
                 // Details fields
@@ -44,13 +54,13 @@ sap.ui.define([
                     this.byId("detailEnroll").setText("Enrollment: " + formatDate(oResult.details.enrollmentDate));
                 }
 
-                this.byId("detailPanel").setVisible(true);
-
+                oPanel.setVisible(true); // show panel
             }.bind(this)).catch(function (oError) {
                 sap.m.MessageToast.show("Could not load student details");
                 console.error(oError);
             });
         }
+
 
 
 

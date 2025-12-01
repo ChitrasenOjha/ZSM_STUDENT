@@ -1,22 +1,38 @@
 <mvc:View
     controllerName="zsmstudentapp.controller.zsm_studentapp"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-
-    <Page id="page" title="Student List">
-
+    xmlns="sap.m"
+>
+    <Page
+        id="page"
+        title="Student List"
+    >
         <headerContent>
             <Toolbar>
-                <Button text="Add" icon="sap-icon://add" press=".onAdd" />
-                <Button text="Update" icon="sap-icon://edit" press=".onUpdate" />
-                <Button text="Delete" icon="sap-icon://delete" press=".onDelete" />
+                <Button
+                    text="Add"
+                    icon="sap-icon://add"
+                    press=".onAdd"
+                />
+                <Button
+                    text="Update"
+                    icon="sap-icon://edit"
+                    press=".onUpdate"
+                />
+                <Button
+                    text="Delete"
+                    icon="sap-icon://delete"
+                    press=".onDelete"
+                />
                 <ToolbarSpacer />
-                <Button icon="sap-icon://refresh" press=".onRefresh" />
+                <Button
+                    icon="sap-icon://refresh"
+                    press=".onRefresh"
+                />
             </Toolbar>
         </headerContent>
 
         <content>
-
             <!-- STUDENTS TABLE -->
             <Table
                 id="studentTable"
@@ -25,14 +41,24 @@
                     path: '/Students',
                     parameters: { expand: 'details' }
                 }"
-                itemPress=".onRowPress">
-
+                itemPress=".onRowPress"
+            >
                 <columns>
-                    <Column><Text text="ID"/></Column>
-                    <Column><Text text="First Name"/></Column>
-                    <Column><Text text="Last Name"/></Column>
-                    <Column><Text text="Class"/></Column>
-                    <Column><Text text="Section"/></Column>
+                    <Column>
+                        <Text text="ID" />
+                    </Column>
+                    <Column>
+                        <Text text="First Name" />
+                    </Column>
+                    <Column>
+                        <Text text="Last Name" />
+                    </Column>
+                    <Column>
+                        <Text text="Class" />
+                    </Column>
+                    <Column>
+                        <Text text="Section" />
+                    </Column>
                 </columns>
 
                 <items>
@@ -46,7 +72,6 @@
                         </cells>
                     </ColumnListItem>
                 </items>
-
             </Table>
 
             <!-- DETAILS PANEL -->
@@ -55,24 +80,23 @@
                 headerText="Student Details"
                 visible="false"
                 class="sapUiSmallMarginTop"
-                expandable="true"
-                expanded="true">
-
-                <VBox class="sapUiSmallMargin">
-                    <Text id="detailID" />
-                    <Text id="detailFirstName" />
-                    <Text id="detailLastName" />
-                    <Text id="detailClass" />
-                    <Text id="detailSection" />
-                    <Text id="detailEmail" />
-                    <Text id="detailPhone" />
-                    <Text id="detailGuardian" />
-                    <Text id="detailAddress" />
-                    <Text id="detailDOB" />
-                    <Text id="detailEnroll" />
+            >
+                <VBox
+                    id="detailVBox" class="sapUiSmallMargin">
+                    <Text id="detailID" text=""/>
+                    <Text id="detailFirstName" text=""/>
+                    <Text id="detailLastName" text="" />
+                    <Text id="detailClass" text=""/>
+                    <Text id="detailSection" text="" />
+                    <Text id="detailEmail" text="" />
+                    <Text id="detailPhone" text="" />
+                    <Text id="detailGuardian" text="" />
+                    <Text id="detailAddress" text="" />
+                    <Text id="detailDOB" text="" />
+                    <Text id="detailEnroll" text="" />
+                    
                 </VBox>
             </Panel>
-
         </content>
     </Page>
 </mvc:View>
