@@ -1,0 +1,62 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+>
+    <Dialog
+        id="studentDialog"
+        title="Student Details"
+        resizable="true"
+        contentWidth="500px"
+    >
+        <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <core:Title text="Core Data" />
+            
+            <Label text="Student ID" required="true"/>
+            <Input id="dialogStudentID" value="{temp>studentID}" editable="true"/>
+
+            <Label text="First Name" required="true"/>
+            <Input id="dialogFirstName" value="{temp>firstName}" />
+            
+            <Label text="Last Name"/>
+            <Input id="dialogLastName" value="{temp>lastName}" />
+
+            <Label text="Class"/>
+            <Input id="dialogClass" value="{temp>class}" />
+
+            <Label text="Section"/>
+            <Input id="dialogSection" value="{temp>section}" />
+
+            <core:Title text="Contact &amp; Details" />
+
+            <Label text="Email"/>
+            <Input id="dialogEmail" value="{temp>details/email}" type="Email"/>
+
+            <Label text="Phone Number"/>
+            <Input id="dialogPhone" value="{temp>details/phoneNumber}" type="Tel"/>
+            
+            <Label text="Guardian Name"/>
+            <Input id="dialogGuardianName" value="{temp>details/guardianName}" />
+            
+            <Label text="Emergency Contact"/>
+            <Input id="dialogEmergencyContactName" value="{temp>details/emergencyContactName}" />
+
+            <Label text="Address"/>
+            <Input id="dialogAddress" value="{temp>details/address}" />
+
+            <Label text="Date of Birth"/>
+            <DatePicker id="dialogDOB" value="{temp>details/dateOfBirth}" displayFormat="long"/>
+
+            <Label text="Enrollment Date"/>
+            <DatePicker id="dialogEnrollDate" value="{temp>details/enrollmentDate}" displayFormat="long"/>
+            
+        </f:SimpleForm>
+
+        <beginButton>
+            <Button text="Save" type="Accept" press=".onSaveDialog" />
+        </beginButton>
+        <endButton>
+            <Button text="Cancel" type="Reject" press=".onCancelDialog" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

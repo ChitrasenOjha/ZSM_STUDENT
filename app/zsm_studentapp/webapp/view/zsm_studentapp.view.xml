@@ -2,6 +2,7 @@
     controllerName="zsmstudentapp.controller.zsm_studentapp"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
 >
     <Page
         id="page"
@@ -33,13 +34,14 @@
         </headerContent>
 
         <content>
-            <!-- STUDENTS TABLE -->
             <Table
                 id="studentTable"
                 mode="SingleSelectMaster"
                 items="{
                     path: '/Students',
-                    parameters: { expand: 'details' }
+                    parameters: { 
+                        expand: 'details' 
+                    }
                 }"
                 itemPress=".onRowPress"
             >
@@ -74,27 +76,34 @@
                 </items>
             </Table>
 
-            <!-- DETAILS PANEL -->
             <Panel
                 id="detailPanel"
                 headerText="Student Details"
                 visible="false"
                 class="sapUiSmallMarginTop"
+                expandable="false"
+                expanded="true"
             >
                 <VBox
-                    id="detailVBox" class="sapUiSmallMargin">
-                    <Text id="detailID" text=""/>
-                    <Text id="detailFirstName" text=""/>
-                    <Text id="detailLastName" text="" />
-                    <Text id="detailClass" text=""/>
-                    <Text id="detailSection" text="" />
-                    <Text id="detailEmail" text="" />
-                    <Text id="detailPhone" text="" />
-                    <Text id="detailGuardian" text="" />
-                    <Text id="detailAddress" text="" />
-                    <Text id="detailDOB" text="" />
-                    <Text id="detailEnroll" text="" />
-                    
+                    id="detailVBox"
+                    class="sapUiSmallMargin"
+                >
+                    <Text text="ID: {studentID}" />
+                    <Text text="First Name: {firstName}" />
+                    <Text text="Last Name: {lastName}" />
+                    <Text text="Class: {class}" />
+                    <Text text="Section: {section}" />
+
+                    <Text text="Email: {details/email}" />
+                    <Text text="Phone: {details/phoneNumber}" />
+                    <Text text="Guardian: {details/guardianName}" />
+                    <Text
+                        text="Emergency Contact: {details/emergencyContactName}"
+                    />
+                    <Text text="Address: {details/address}" />
+
+                    <Text text="Date of Birth: {details/dateOfBirth}" />
+                    <Text text="Enrollment Date: {details/enrollmentDate}" />
                 </VBox>
             </Panel>
         </content>

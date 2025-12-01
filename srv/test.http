@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "student": {
-    "studentID": "S1003",
+    "studentID": "S1004",
     "firstName": "ABC",
     "lastName": "DEF",
     "class": "10",
