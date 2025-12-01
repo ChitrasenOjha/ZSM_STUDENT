@@ -28,14 +28,7 @@
   },
   "sap.ui": {
     "technology": "UI5",
-    "icons": {
-      "icon": "",
-      "favIcon": "",
-      "phone": "",
-      "phone@2": "",
-      "tablet": "",
-      "tablet@2": ""
-    },
+    "icons": {},
     "deviceTypes": {
       "desktop": true,
       "tablet": true,
@@ -43,17 +36,18 @@
     }
   },
   "sap.ui5": {
-    "flexEnabled": true,
+    "rootView": {
+      "viewName": "zsmstudentapp.view.App",
+      "type": "XML",
+      "id": "App",
+      "async": true
+    },
     "dependencies": {
       "minUI5Version": "1.143.0",
       "libs": {
         "sap.m": {},
         "sap.ui.core": {}
       }
-    },
-    "contentDensities": {
-      "compact": true,
-      "cozy": true
     },
     "models": {
       "i18n": {
@@ -72,6 +66,10 @@
         }
       }
     },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
     "resources": {
       "css": [
         {
@@ -82,36 +80,37 @@
     "routing": {
       "config": {
         "routerClass": "sap.m.routing.Router",
-        "controlAggregation": "pages",
         "controlId": "app",
-        "transition": "slide",
-        "type": "View",
+        "controlAggregation": "pages",
         "viewType": "XML",
-        "path": "zsmstudentapp.view",
+        "viewPath": "zsmstudentapp.view",
         "async": true,
-        "viewPath": "zsmstudentapp.view"
+        "transition": "slide"
       },
       "routes": [
         {
-          "name": "Routezsm_studentapp",
-          "pattern": ":?query:",
-          "target": [
-            "Targetzsm_studentapp"
-          ]
+          "name": "HomeRoute",
+          "pattern": "",
+          "target": "HomeTarget"
+        },
+        {
+          "name": "StudentRoute",
+          "pattern": "students",
+          "target": "StudentTarget"
         }
       ],
       "targets": {
-        "Targetzsm_studentapp": {
-          "id": "zsm_studentapp",
-          "name": "zsm_studentapp"
+        "HomeTarget": {
+          "viewName": "Home",
+          "viewId": "Home",
+          "viewLevel": 1
+        },
+        "StudentTarget": {
+          "viewName": "zsm_studentapp",
+          "viewId": "Student",
+          "viewLevel": 2
         }
       }
-    },
-    "rootView": {
-      "viewName": "zsmstudentapp.view.App",
-      "type": "XML",
-      "id": "App",
-      "async": true
     }
   }
 }

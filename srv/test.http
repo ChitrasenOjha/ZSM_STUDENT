@@ -4,9 +4,9 @@ Content-Type: application/json
 
 {
   "student": {
-    "studentID": "S1002",
-    "firstName": "Test",
-    "lastName": "Sharma",
+    "studentID": "S1003",
+    "firstName": "ABC",
+    "lastName": "DEF",
     "class": "10",
     "section": "B",
 
@@ -16,7 +16,7 @@ Content-Type: application/json
     "guardianName": "Raj Sharma",
     "address": "New Delhi",
 
-    "dateOfBirth": "2007-05-10",
+    "dateOfBirth": "2017-05-10",
     "enrollmentDate": "2020-06-15"
   }
 }

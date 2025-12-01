@@ -1,0 +1,31 @@
+<mvc:View
+  controllerName="zsmstudentapp.controller.Home"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m">
+
+  <Page
+    id="homePage"
+    title="Apps Dashboard"
+    titleAlignment="Center">
+
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Title text="Select a Category" level="H2" class="sapUiSmallMarginBottom"/>
+
+        <FlexBox justifyContent="Center" wrap="Wrap">
+          <GenericTile
+            id="studentTile"
+            header="Students"
+            subheader="View all students"
+            press=".onStudentTilePress"
+            class="sapUiTinyMargin">
+            <TileContent>
+              <ImageContent src="sap-icon://employee"/>
+            </TileContent>
+          </GenericTile>
+        </FlexBox>
+      </VBox>
+    </content>
+
+  </Page>
+</mvc:View>

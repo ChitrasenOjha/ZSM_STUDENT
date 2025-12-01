@@ -3,85 +3,76 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m">
 
-    <Page
-        id="page"
-        title="Student List">
+    <Page id="page" title="Student List">
 
-        <!-- TOP TOOLBAR -->
         <headerContent>
-            <Toolbar id="mainToolbar">
-
-                <Button
-                    id="btnAdd"
-                    text="Add"
-                    icon="sap-icon://add"
-                    press=".onAdd" />
-
-                <Button
-                    id="btnUpdate"
-                    text="Update"
-                    icon="sap-icon://edit"
-                    press=".onUpdate" />
-
-                <Button
-                    id="btnDelete"
-                    text="Delete"
-                    icon="sap-icon://delete"
-                    press=".onDelete" />
-
-                <ToolbarSpacer id="_IDGenToolbarSpacer" />
-
-                <Button
-                    id="btnRefresh"
-                    icon="sap-icon://refresh"
-                    press=".onRefresh" />
+            <Toolbar>
+                <Button text="Add" icon="sap-icon://add" press=".onAdd" />
+                <Button text="Update" icon="sap-icon://edit" press=".onUpdate" />
+                <Button text="Delete" icon="sap-icon://delete" press=".onDelete" />
+                <ToolbarSpacer />
+                <Button icon="sap-icon://refresh" press=".onRefresh" />
             </Toolbar>
         </headerContent>
 
-        <!-- TABLE -->
         <content>
+
+            <!-- STUDENTS TABLE -->
             <Table
                 id="studentTable"
-                mode="SingleSelect"
-                items="{/Students}">
+                mode="SingleSelectMaster"
+                items="{
+                    path: '/Students',
+                    parameters: { expand: 'details' }
+                }"
+                itemPress=".onRowPress">
 
                 <columns>
-                    <Column id="colID">
-                        <Text id="txtID" text="ID" />
-                    </Column>
-
-                    <Column id="colFirst">
-                        <Text id="txtFirst" text="First Name" />
-                    </Column>
-
-                    <Column id="colLast">
-                        <Text id="txtLast" text="Last Name" />
-                    </Column>
-
-                    <Column id="colClass">
-                        <Text id="txtClass" text="Class" />
-                    </Column>
-
-                    <Column id="colSection">
-                        <Text id="txtSection" text="Section" />
-                    </Column>
+                    <Column><Text text="ID"/></Column>
+                    <Column><Text text="First Name"/></Column>
+                    <Column><Text text="Last Name"/></Column>
+                    <Column><Text text="Class"/></Column>
+                    <Column><Text text="Section"/></Column>
                 </columns>
 
                 <items>
-                    <ColumnListItem id="rowStudent" type="Active">
+                    <ColumnListItem type="Active">
                         <cells>
-                            <Text id="cellID" text="{studentID}" />
-                            <Text id="cellFirst" text="{firstName}" />
-                            <Text id="cellLast" text="{lastName}" />
-                            <Text id="cellClass" text="{class}" />
-                            <Text id="cellSection" text="{section}" />
+                            <Text text="{studentID}" />
+                            <Text text="{firstName}" />
+                            <Text text="{lastName}" />
+                            <Text text="{class}" />
+                            <Text text="{section}" />
                         </cells>
                     </ColumnListItem>
                 </items>
 
             </Table>
+
+            <!-- DETAILS PANEL -->
+            <Panel
+                id="detailPanel"
+                headerText="Student Details"
+                visible="false"
+                class="sapUiSmallMarginTop"
+                expandable="true"
+                expanded="true">
+
+                <VBox class="sapUiSmallMargin">
+                    <Text id="detailID" />
+                    <Text id="detailFirstName" />
+                    <Text id="detailLastName" />
+                    <Text id="detailClass" />
+                    <Text id="detailSection" />
+                    <Text id="detailEmail" />
+                    <Text id="detailPhone" />
+                    <Text id="detailGuardian" />
+                    <Text id="detailAddress" />
+                    <Text id="detailDOB" />
+                    <Text id="detailEnroll" />
+                </VBox>
+            </Panel>
+
         </content>
-
     </Page>
-
 </mvc:View>
