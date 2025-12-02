@@ -35,6 +35,64 @@ sap.ui.define([
             const oContext = oSelectedItem.getBindingContext();
             this._openDialog("Update", oContext);
         },
+        // --- Dialog Management Functions ---
+
+        _openDialog: async function (sMode, oContext) {
+            const oView = this.getView();
+
+            if (!this._oDialog) {
+                this._oDialog = await Fragment.load({
+                    id: oView.getId(),
+                    name: "zsmstudentapp.view.StudentDialog", // Ensure this name matches your fragment file
+                    controller: this
+                });
+                oView.addDependent(this._oDialog);
+            }
+
+            this._configureDialog(sMode, oContext);
+        },
+
+        _configureDialog: function (sMode, oContext) {
+            const oDialog = this._oDialog;
+            const bUpdateMode = sMode === "Update";
+            const oDialogContent = oDialog.getContent()[0];
+
+            oDialog.setTitle(sMode + " Student");
+            this.byId("dialogStudentID").setEditable(!bUpdateMode);
+
+            if (bUpdateMode) {
+                const oOriginalData = oContext.getObject();
+
+                const oDetailsSource = oOriginalData.details;
+ 
+                const oTempData = {
+                    studentID: oOriginalData.studentID,
+                    firstName: oOriginalData.firstName,
+                    lastName: oOriginalData.lastName,
+                    class: oOriginalData.class,
+                    section: oOriginalData.section,
+
+                    details: oDetailsSource || {}
+                };
+
+                const oEditData = JSON.parse(JSON.stringify(oTempData));
+
+                const oEditModel = new JSONModel(oEditData);
+                this.getView().setModel(oEditModel, "temp");
+
+                oDialogContent.setBindingContext(oEditModel.createBindingContext("/"), "temp");
+
+            } else {
+
+                this._clearDialogFields();
+                oDialogContent.setBindingContext(null);
+                this.getView().setModel(new JSONModel({ details: {} }), "temp");
+                oDialogContent.setBindingContext(this.getView().getModel("temp").createBindingContext("/"), "temp");
+            }
+
+            oDialog.open();
+        },
+
         onDelete: async function () {
             const oTable = this.byId("studentTable");
             const oSelected = oTable.getSelectedItem();
@@ -129,71 +187,6 @@ sap.ui.define([
             sap.m.MessageToast.show("Data refreshed.");
         },
 
-
-        // --- Dialog Management Functions ---
-
-        _openDialog: async function (sMode, oContext) {
-            const oView = this.getView();
-
-            if (!this._oDialog) {
-                this._oDialog = await Fragment.load({
-                    id: oView.getId(),
-                    name: "zsmstudentapp.view.StudentDialog", // Ensure this name matches your fragment file
-                    controller: this
-                });
-                oView.addDependent(this._oDialog);
-            }
-
-            this._configureDialog(sMode, oContext);
-        },
-
-        _configureDialog: function (sMode, oContext) {
-            const oDialog = this._oDialog;
-            const bUpdateMode = sMode === "Update";
-            const oDialogContent = oDialog.getContent()[0];
-
-            oDialog.setTitle(sMode + " Student");
-            this.byId("dialogStudentID").setEditable(!bUpdateMode);
-
-            // --- Data Preparation Logic (Isolation Fix) ---
-            if (bUpdateMode) {
-                const oOriginalData = oContext.getObject();
-
-                const oDetailsSource = oOriginalData.StudentDetails;
-
-                const oTempData = {
-                    studentID: oOriginalData.studentID,
-                    firstName: oOriginalData.firstName,
-                    lastName: oOriginalData.lastName,
-                    class: oOriginalData.class,
-                    section: oOriginalData.section,
-
-                    // FIX: Ensure the 'details' property exists and is an object.
-                    // If oDetailsSource exists, use it. Otherwise, initialize it as an empty object {}.
-                    details: oDetailsSource || {}
-                };
-                // --- END FIX ---
-
-                const oEditData = JSON.parse(JSON.stringify(oTempData));
-
-                // 3. Create and set the temporary JSON model (named "temp")
-                const oEditModel = new JSONModel(oEditData);
-                this.getView().setModel(oEditModel, "temp");
-
-                // 4. Bind the dialog content to the root of the "temp" model
-                oDialogContent.setBindingContext(oEditModel.createBindingContext("/"), "temp");
-
-            } else { // Add Mode
-                // This part is correct: it initializes the necessary nested structure { details: {} }
-                this._clearDialogFields();
-                oDialogContent.setBindingContext(null);
-                this.getView().setModel(new JSONModel({ details: {} }), "temp");
-                oDialogContent.setBindingContext(this.getView().getModel("temp").createBindingContext("/"), "temp");
-            }
-
-            oDialog.open();
-        },
-
         _clearDialogFields: function () {
             this.byId("dialogStudentID").setValue("");
             this.byId("dialogFirstName").setValue("");
@@ -235,7 +228,6 @@ sap.ui.define([
                 }
             }
         },
-
         onSaveDialog: async function () {
             const sActionName = this._oDialog.getTitle().startsWith("Add") ? "addStudent" : "updateStudent";
             const oTempModel = this.getView().getModel("temp");
@@ -269,13 +261,51 @@ sap.ui.define([
                 enrollmentDate: this._formatDateToISO(oDialogData.details.enrollmentDate)
             };
 
-            const sStudentID = oRawData.studentID;
+            // V A L I D A T I O N  L O G I C
+            // ----------------------------------------------------------------------------------
+            const aMandatoryFields = [
+                { key: "studentID", label: "Student ID" },
+                { key: "firstName", label: "First Name" },
+                { key: "lastName", label: "Last Name" },
+                { key: "class", label: "Class" },
+                { key: "section", label: "Section" },
+                { key: "email", label: "Email" },
+                { key: "phoneNumber", label: "Phone Number" },
+                { key: "guardianName", label: "Guardian Name" },
+                { key: "emergencyContactName", label: "Emergency Contact Name" },
+                { key: "address", label: "Address" },
+                { key: "dateOfBirth", label: "Date of Birth" },
+                { key: "enrollmentDate", label: "Enrollment Date" }
+            ];
 
-            // ... (Add your validation logic here using oRawData) ...
-            if (!sStudentID || !oRawData.firstName) {
-                MessageToast.show("Student ID and First Name are required.");
+            const aMissingFields = aMandatoryFields.filter(field => !oRawData[field.key]);
+
+            if (aMissingFields.length > 0) {
+                const sMissingFieldsList = aMissingFields.map(field => field.label).join(", ");
+
+                MessageBox.error(`Please fill in all mandatory fields.`); //: ${sMissingFieldsList}.`);
                 return;
             }
+            // ----------------------------------------------------------------------------------
+
+            const sEmail = oRawData.email;
+            const sPhoneNumber = oRawData.phoneNumber;
+
+            // Email format check (must contain @ and .)
+            if (sEmail && (!sEmail.includes("@") || !sEmail.includes("."))) {
+                MessageBox.error("Please enter a valid email address.");
+                return;
+            }
+
+            // Phone number length check (must be exactly 10 digits)
+            const sCleanPhoneNumber = sPhoneNumber.trim();
+            const oPhoneRegex = /^\d{10}$/;
+
+            if (sCleanPhoneNumber && !oPhoneRegex.test(sCleanPhoneNumber)) {
+                MessageBox.error("Please enter a valid 10-digit phone number.");
+                return;
+            }
+            const sStudentID = oRawData.studentID;
 
             const oFinalPayload = { student: oRawData };
 

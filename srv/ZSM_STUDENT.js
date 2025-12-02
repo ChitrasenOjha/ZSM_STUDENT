@@ -89,7 +89,7 @@ module.exports = cds.service.impl(async function () {
     // UPDATE STUDENT
     this.on("updateStudent", async (req) => {
 
-        const { student } = req.data;          // student comes from req.data.student
+        const { student } = req.data;         
         const studentID = student?.studentID;
 
         if (!studentID) return req.error(400, "studentID is required");

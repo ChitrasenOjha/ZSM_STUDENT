@@ -18,36 +18,36 @@
             <Label text="First Name" required="true"/>
             <Input id="dialogFirstName" value="{temp>firstName}" />
             
-            <Label text="Last Name"/>
+            <Label text="Last Name" required="true"/>
             <Input id="dialogLastName" value="{temp>lastName}" />
 
-            <Label text="Class"/>
+            <Label text="Class" required="true"/>
             <Input id="dialogClass" value="{temp>class}" />
 
-            <Label text="Section"/>
+            <Label text="Section" required="true"/>
             <Input id="dialogSection" value="{temp>section}" />
 
             <core:Title text="Contact &amp; Details" />
 
-            <Label text="Email"/>
+            <Label text="Email" required="true"/>
             <Input id="dialogEmail" value="{temp>details/email}" type="Email"/>
 
-            <Label text="Phone Number"/>
+            <Label text="Phone Number" required="true"/>
             <Input id="dialogPhone" value="{temp>details/phoneNumber}" type="Tel"/>
             
-            <Label text="Guardian Name"/>
+            <Label text="Guardian Name" required="true"/>
             <Input id="dialogGuardianName" value="{temp>details/guardianName}" />
             
-            <Label text="Emergency Contact"/>
+            <Label text="Emergency Contact Name" required="true"/>
             <Input id="dialogEmergencyContactName" value="{temp>details/emergencyContactName}" />
 
-            <Label text="Address"/>
+            <Label text="Address" required="true"/>
             <Input id="dialogAddress" value="{temp>details/address}" />
 
-            <Label text="Date of Birth"/>
+            <Label text="Date of Birth" required="true"/>
             <DatePicker id="dialogDOB" value="{temp>details/dateOfBirth}" displayFormat="long"/>
 
-            <Label text="Enrollment Date"/>
+            <Label text="Enrollment Date" required="true"/>
             <DatePicker id="dialogEnrollDate" value="{temp>details/enrollmentDate}" displayFormat="long"/>
             
         </f:SimpleForm>
