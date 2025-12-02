@@ -97,13 +97,6 @@ module.exports = cds.service.impl(async function () {
         const exists = await SELECT.one.from(Students).where({ studentID });
         if (!exists) return req.error(400, "Student ID does not exist");
 
-        // Convert date helper
-        const convertDate = (d) => {
-            if (!d) return null;
-            if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return `${d}T00:00:00Z`;
-            return d;
-        };
-
         const studentUpdate = {
             firstName: student.firstName,
             lastName: student.lastName,
@@ -117,8 +110,8 @@ module.exports = cds.service.impl(async function () {
             emergencyContactName: student.emergencyContactName,
             guardianName: student.guardianName,
             address: student.address,
-            dateOfBirth: convertDate(student.dateOfBirth),
-            enrollmentDate: convertDate(student.enrollmentDate)
+            dateOfBirth: student.dateOfBirth,
+            enrollmentDate: student.enrollmentDate
         };
 
         try {

@@ -18,8 +18,8 @@ entity StudentDetails {
     emergencyContactName : String;
     guardianName        : String;
     address             : String;
-    dateOfBirth         : Date;
-    enrollmentDate      : Date;
+    dateOfBirth         : Date @assert.format:'date';
+    enrollmentDate      : Date ;
 
     student : Association to Students
         on student.studentID = $self.studentID;

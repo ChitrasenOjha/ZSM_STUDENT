@@ -7,25 +7,51 @@ sap.ui.define([
 ], (Controller, MessageBox, MessageToast, Fragment, JSONModel) => {
     "use strict";
 
-    const SERVICE_ROOT = "/odata/v4/z-service-students"; // Adjust if your service name is different
+    // Constants and Configuration
+    const SERVICE_ROOT = "/odata/v4/z-service-students";
+    const FRAGMENT_NAME = "zsmstudentapp.view.StudentDialog";
+    const TABLE_ID = "studentTable";
+    const DETAIL_PANEL_ID = "detailPanel";
+
+    const ACTION_ADD = "Add";
+    const ACTION_UPDATE = "Update";
+    const API_ADD = "addStudent";
+    const API_UPDATE = "updateStudent";
+    const API_DELETE = "deleteStudent";
+
+    const MANDATORY_FIELDS = [
+        { key: "studentID", label: "Student ID" },
+        { key: "firstName", label: "First Name" },
+        { key: "lastName", label: "Last Name" },
+        { key: "class", label: "Class" },
+        { key: "section", label: "Section" },
+        { key: "email", label: "Email" },
+        { key: "phoneNumber", label: "Phone Number" },
+        { key: "guardianName", label: "Guardian Name" },
+        { key: "emergencyContactName", label: "Emergency Contact Name" },
+        { key: "address", label: "Address" },
+        { key: "dateOfBirth", label: "Date of Birth" },
+        { key: "enrollmentDate", label: "Enrollment Date" }
+    ];
 
     return Controller.extend("zsmstudentapp.controller.zsm_studentapp", {
 
         _oDialog: null,
+        _lastSelectedID: null, // Used for the detail panel toggle
 
         onInit: function () {
-            // Initialization logic, if any
         },
 
-
-        // --- Event Handlers for Buttons ---
+        // ----------------------------------------
+        // Event Handlers
+        // ----------------------------------------
 
         onAdd: function () {
-            this._openDialog("Add");
+            this._openDialog(ACTION_ADD);
         },
 
         onUpdate: function () {
-            const oTable = this.byId("studentTable"); // Use your actual table ID
+            const oTable = this.byId(TABLE_ID);
             const oSelectedItem = oTable.getSelectedItem();
 
             if (!oSelectedItem) {
@@ -33,127 +59,30 @@ sap.ui.define([
                 return;
             }
             const oContext = oSelectedItem.getBindingContext();
-            this._openDialog("Update", oContext);
-        },
-        // --- Dialog Management Functions ---
-
-        _openDialog: async function (sMode, oContext) {
-            const oView = this.getView();
-
-            if (!this._oDialog) {
-                this._oDialog = await Fragment.load({
-                    id: oView.getId(),
-                    name: "zsmstudentapp.view.StudentDialog", // Ensure this name matches your fragment file
-                    controller: this
-                });
-                oView.addDependent(this._oDialog);
-            }
-
-            this._configureDialog(sMode, oContext);
-        },
-
-        _configureDialog: function (sMode, oContext) {
-            const oDialog = this._oDialog;
-            const bUpdateMode = sMode === "Update";
-            const oDialogContent = oDialog.getContent()[0];
-
-            oDialog.setTitle(sMode + " Student");
-            this.byId("dialogStudentID").setEditable(!bUpdateMode);
-
-            if (bUpdateMode) {
-                const oOriginalData = oContext.getObject();
-
-                const oDetailsSource = oOriginalData.details;
- 
-                const oTempData = {
-                    studentID: oOriginalData.studentID,
-                    firstName: oOriginalData.firstName,
-                    lastName: oOriginalData.lastName,
-                    class: oOriginalData.class,
-                    section: oOriginalData.section,
-
-                    details: oDetailsSource || {}
-                };
-
-                const oEditData = JSON.parse(JSON.stringify(oTempData));
-
-                const oEditModel = new JSONModel(oEditData);
-                this.getView().setModel(oEditModel, "temp");
-
-                oDialogContent.setBindingContext(oEditModel.createBindingContext("/"), "temp");
-
-            } else {
-
-                this._clearDialogFields();
-                oDialogContent.setBindingContext(null);
-                this.getView().setModel(new JSONModel({ details: {} }), "temp");
-                oDialogContent.setBindingContext(this.getView().getModel("temp").createBindingContext("/"), "temp");
-            }
-
-            oDialog.open();
+            this._openDialog(ACTION_UPDATE, oContext);
         },
 
         onDelete: async function () {
-            const oTable = this.byId("studentTable");
+            const oTable = this.byId(TABLE_ID);
             const oSelected = oTable.getSelectedItem();
+
             if (!oSelected) {
                 MessageBox.warning("Please select a student first.");
                 return;
             }
 
-            const studentID = oSelected.getBindingContext().getProperty("studentID");
-            const sStudentName = oSelected.getBindingContext().getProperty("firstName");
+            const oContext = oSelected.getBindingContext();
+            const studentID = oContext.getProperty("studentID");
+            const sStudentName = oContext.getProperty("firstName");
 
-            const bConfirm = await new Promise((resolve) => {
-                MessageBox.confirm(
-                    `Delete student: ${sStudentName} (${studentID})?`,
-                    {
-                        title: "Confirm Deletion",
-                        actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
-                        emphasizedAction: MessageBox.Action.OK,
-                        onClose: (sAction) => resolve(sAction === MessageBox.Action.OK)
-                    }
-                );
-            });
-
-            if (!bConfirm) {
-                return;
-            }
+            const bConfirm = await this._confirmDeletion(sStudentName, studentID);
+            if (!bConfirm) return;
 
             try {
-                const sActionName = "deleteStudent";
-                const sUrl = `${SERVICE_ROOT}/${sActionName}`;
-
-                // CRITICAL: Payload must match your backend action handler!
-                // The handler expects: req.data.student.studentID
-                const oFinalPayload = {
-                    student: {
-                        studentID: studentID
-                    }
-                };
-
-                const response = await fetch(sUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(oFinalPayload)
-                });
-
-                if (!response.ok) {
-                    let errorMessage = `${sActionName} failed.`;
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData?.error?.message || response.statusText;
-                    } catch (e) {
-                        errorMessage = response.statusText || errorMessage;
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                // Success message
-                const sResult = await response.text();
+                const oFinalPayload = { student: { studentID: studentID } };
+                await this._executeApiCall(API_DELETE, oFinalPayload);
                 MessageBox.success("Student details deleted successfully");
-            }
-            catch (err) {
+            } catch (err) {
                 MessageBox.error(`Delete failed: ${err.message}`);
                 console.error("Delete API Fetch Error:", err);
                 return;
@@ -163,73 +92,66 @@ sap.ui.define([
         },
 
         onRefresh: function () {
-            const oTable = this.byId("studentTable");
-            const oPanel = this.byId("detailPanel"); // Use the same ID as in onRowPress
+            const oTable = this.byId(TABLE_ID);
+            const oPanel = this.byId(DETAIL_PANEL_ID);
 
             // 1. Clear the detail panel state
             if (oPanel) {
                 oPanel.setVisible(false);
-                oPanel.setBindingContext(null); // Optional: Clear the panel's binding context
-                this._lastSelectedID = null;    // Reset the tracker variable
+                oPanel.setBindingContext(null);
+                this._lastSelectedID = null;
             }
 
-            // 2. Clear any selected items on the table
+            // 2. Clear table selection and refresh OData binding
             if (oTable) {
-                // The 'true' parameter suppresses the selection change event
                 oTable.removeSelections(true);
+                oTable.getBinding("items")?.refresh();
             }
 
-            // 3. Refresh the OData binding
-            if (oTable && oTable.getBinding("items")) {
-                oTable.getBinding("items").refresh();
-            }
-
-            sap.m.MessageToast.show("Data refreshed.");
+            MessageToast.show("Data refreshed.");
         },
 
-        _clearDialogFields: function () {
-            this.byId("dialogStudentID").setValue("");
-            this.byId("dialogFirstName").setValue("");
-            this.byId("dialogLastName").setValue("");
-            this.byId("dialogClass").setValue("");
-            this.byId("dialogSection").setValue("");
-            this.byId("dialogEmail").setValue("");
-            this.byId("dialogPhone").setValue("");
-            this.byId("dialogGuardianName").setValue("");
-            this.byId("dialogEmergencyContactName").setValue("");
-            this.byId("dialogAddress").setValue("");
-            this.byId("dialogDOB").setValue(null);
-            this.byId("dialogEnrollDate").setValue(null);
+        onRowPress: function (oEvent) {
+            const oSelectedItem = oEvent.getParameter("listItem");
+            if (!oSelectedItem) return;
 
-            // Reset the temporary model's data
-            const oTempModel = this.getView().getModel("temp");
-            if (oTempModel) {
-                oTempModel.setData({ details: {} }); // Reset to empty object
+            const oPanel = this.byId(DETAIL_PANEL_ID);
+            const oContext = oSelectedItem.getBindingContext();
+            const sStudentID = oContext.getProperty("studentID");
+
+            // Toggle visibility logic: clicking the same row closes the panel
+            if (oPanel.getVisible() && this._lastSelectedID === sStudentID) {
+                oPanel.setVisible(false);
+                this._lastSelectedID = null;
+                return;
             }
+
+            // Element Binding: Bind the panel to the selected item's context and show
+            oPanel.setBindingContext(oContext);
+            oPanel.setVisible(true);
+            this._lastSelectedID = sStudentID;
         },
+
+        // ----------------------------------------
+        // Dialog Handlers
+        // ----------------------------------------
 
         onCancelDialog: function () {
-            if (this._oDialog) {
+            if (!this._oDialog) return;
 
-                const sDialogTitle = this._oDialog.getTitle();
+            const sDialogTitle = this._oDialog.getTitle();
+            this._oDialog.close();
+            this._destroyTempModel();
 
-                this._oDialog.close();
-
-                // Clean up the temporary JSON Model
-                const oTempModel = this.getView().getModel("temp");
-                if (oTempModel) {
-                    oTempModel.destroy();
-                    this.getView().setModel(null, "temp");
-                }
-
-                // Only show the message if we were updating an existing record (or if title isn't 'Add')
-                if (!sDialogTitle.startsWith("Add")) {
-                    sap.m.MessageToast.show("Canceled. Changes discarded.");
-                }
+            // Show cancel message only if updating
+            if (sDialogTitle.startsWith(ACTION_UPDATE)) {
+                MessageToast.show("Canceled. Changes discarded.");
             }
         },
+
         onSaveDialog: async function () {
-            const sActionName = this._oDialog.getTitle().startsWith("Add") ? "addStudent" : "updateStudent";
+            const isAddMode = this._oDialog.getTitle().startsWith(ACTION_ADD);
+            const sActionName = isAddMode ? API_ADD : API_UPDATE;
             const oTempModel = this.getView().getModel("temp");
 
             if (!oTempModel) {
@@ -237,106 +159,28 @@ sap.ui.define([
                 return;
             }
 
-            // Retrieve all data from the isolated temporary model
-            const oDialogData = oTempModel.getData();
+            const oRawData = this._prepareDataForSave(oTempModel.getData());
 
-            // --- Flatten and prepare the final payload structure for CAP ---
-            const oRawData = {
-                // Core Data
-                studentID: oDialogData.studentID,
-                firstName: oDialogData.firstName,
-                lastName: oDialogData.lastName,
-                class: oDialogData.class,
-                section: oDialogData.section,
-
-                // Detail Data (Flattened into the single student object)
-                email: oDialogData.details.email,
-                phoneNumber: oDialogData.details.phoneNumber,
-                guardianName: oDialogData.details.guardianName,
-                emergencyContactName: oDialogData.details.emergencyContactName,
-                address: oDialogData.details.address,
-
-                // Date formatting fix
-                dateOfBirth: this._formatDateToISO(oDialogData.details.dateOfBirth),
-                enrollmentDate: this._formatDateToISO(oDialogData.details.enrollmentDate)
-            };
-
-            // V A L I D A T I O N  L O G I C
-            // ----------------------------------------------------------------------------------
-            const aMandatoryFields = [
-                { key: "studentID", label: "Student ID" },
-                { key: "firstName", label: "First Name" },
-                { key: "lastName", label: "Last Name" },
-                { key: "class", label: "Class" },
-                { key: "section", label: "Section" },
-                { key: "email", label: "Email" },
-                { key: "phoneNumber", label: "Phone Number" },
-                { key: "guardianName", label: "Guardian Name" },
-                { key: "emergencyContactName", label: "Emergency Contact Name" },
-                { key: "address", label: "Address" },
-                { key: "dateOfBirth", label: "Date of Birth" },
-                { key: "enrollmentDate", label: "Enrollment Date" }
-            ];
-
-            const aMissingFields = aMandatoryFields.filter(field => !oRawData[field.key]);
-
-            if (aMissingFields.length > 0) {
-                const sMissingFieldsList = aMissingFields.map(field => field.label).join(", ");
-
-                MessageBox.error(`Please fill in all mandatory fields.`); //: ${sMissingFieldsList}.`);
+            // --- V A L I D A T I O N ---
+            const sValidationError = this._validateStudentData(oRawData);
+            if (sValidationError) {
+                MessageBox.error(sValidationError);
                 return;
             }
-            // ----------------------------------------------------------------------------------
+            // ---------------------------
 
-            const sEmail = oRawData.email;
-            const sPhoneNumber = oRawData.phoneNumber;
-
-            // Email format check (must contain @ and .)
-            if (sEmail && (!sEmail.includes("@") || !sEmail.includes("."))) {
-                MessageBox.error("Please enter a valid email address.");
-                return;
-            }
-
-            // Phone number length check (must be exactly 10 digits)
-            const sCleanPhoneNumber = sPhoneNumber.trim();
-            const oPhoneRegex = /^\d{10}$/;
-
-            if (sCleanPhoneNumber && !oPhoneRegex.test(sCleanPhoneNumber)) {
-                MessageBox.error("Please enter a valid 10-digit phone number.");
-                return;
-            }
             const sStudentID = oRawData.studentID;
-
             const oFinalPayload = { student: oRawData };
 
             try {
-                const sUrl = `${SERVICE_ROOT}/${sActionName}`;
-
-                const response = await fetch(sUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(oFinalPayload)
-                });
-
-                if (!response.ok) {
-                    let errorMessage = await response.text();
-                    try {
-                        const errorData = JSON.parse(errorMessage);
-                        errorMessage = errorData.error?.message || errorMessage;
-                    } catch (e) { /* ignore if not JSON */ }
-                    throw new Error(errorMessage);
-                }
-
-                const sActionVerb = this._oDialog.getTitle().startsWith("Add") ? "added" : "updated";
+                await this._executeApiCall(sActionName, oFinalPayload);
+                const sActionVerb = isAddMode ? "added" : "updated";
+                MessageBox.success(`Student ${sStudentID} ${sActionVerb} successfully.`);
 
                 // Success: Close and clean up
-                MessageBox.success(`Student ${sStudentID} ${sActionVerb} successfully.`);
-                // Clean up the temporary JSON Model and close
-                oTempModel.destroy();
-                this.getView().setModel(null, "temp");
+                this._destroyTempModel();
                 this._oDialog.close();
-            }
-            catch (err) {
+            } catch (err) {
                 MessageBox.error(`Action failed: ${err.message}`);
                 console.error("API Fetch Error:", err);
                 // Keep dialog open on error
@@ -346,47 +190,201 @@ sap.ui.define([
             this.onRefresh();
         },
 
-        // --- Utility Function ---
+        // ----------------------------------------
+        // Helper Functions
+        // ----------------------------------------
 
+        /**
+         * Loads and opens the fragment dialog, configuring it for the given mode.
+         * @param {string} sMode - "Add" or "Update"
+         * @param {object} [oContext] - Binding context for "Update" mode
+         */
+        _openDialog: async function (sMode, oContext) {
+            const oView = this.getView();
+
+            if (!this._oDialog) {
+                this._oDialog = await Fragment.load({
+                    id: oView.getId(),
+                    name: FRAGMENT_NAME,
+                    controller: this
+                });
+                oView.addDependent(this._oDialog);
+            }
+
+            this._configureDialog(sMode, oContext);
+            this._oDialog.open();
+        },
+
+        /**
+         * Configures the dialog for Add/Update mode and sets up the temporary model.
+         */
+        _configureDialog: function (sMode, oContext) {
+            const oDialog = this._oDialog;
+            const bUpdateMode = sMode === ACTION_UPDATE;
+            const oDialogContent = oDialog.getContent()[0]; // Assuming the content is bound
+
+            oDialog.setTitle(`${sMode} Student`);
+            this.byId("dialogStudentID").setEditable(!bUpdateMode);
+
+            let oEditData = { details: {} };
+
+            if (bUpdateMode && oContext) {
+                // Deep copy data from the original model to the temp model
+                const oOriginalData = oContext.getObject();
+                oEditData = {
+                    ...oOriginalData,
+                    details: oOriginalData.details ? { ...oOriginalData.details } : {}
+                };
+            }
+
+            // Create and set the temporary JSON Model
+            const oEditModel = new JSONModel(oEditData);
+            this.getView().setModel(oEditModel, "temp");
+
+            // Bind the dialog content to the root of the temporary model
+            oDialogContent.setBindingContext(oEditModel.createBindingContext("/"), "temp");
+
+            // Note: _clearDialogFields is now redundant because setting a fresh JSONModel with default
+            // data (or the original data) handles the field values via two-way binding.
+        },
+
+        /**
+         * Flattens the temporary model structure for the CAP API.
+         * @param {object} oDialogData - Data from the temporary model.
+         * @returns {object} The flattened and ISO-formatted data payload.
+         */
+        _prepareDataForSave: function (oDialogData) {
+            const oDetails = oDialogData.details || {};
+
+            return {
+                studentID: oDialogData.studentID,
+                firstName: oDialogData.firstName,
+                lastName: oDialogData.lastName,
+                class: oDialogData.class,
+                section: oDialogData.section,
+
+                // Detail Data (Flattened)
+                email: oDetails.email,
+                phoneNumber: oDetails.phoneNumber,
+                guardianName: oDetails.guardianName,
+                emergencyContactName: oDetails.emergencyContactName,
+                address: oDetails.address,
+
+                // Date formatting
+                dateOfBirth: this._formatDateToISO(oDetails.dateOfBirth),
+                enrollmentDate: this._formatDateToISO(oDetails.enrollmentDate)
+            };
+        },
+
+        /**
+         * Validates the mandatory, email, and phone number fields.
+         * @param {object} oRawData - The flattened student data.
+         * @returns {string|null} Error message or null if valid.
+         */
+        _validateStudentData: function (oRawData) {
+            // 1. Mandatory Fields Check
+            const aMissingFields = MANDATORY_FIELDS.filter(field => !oRawData[field.key]);
+
+            if (aMissingFields.length > 0) {
+                // Optionally add the list of missing fields:
+                // const sMissingFieldsList = aMissingFields.map(field => field.label).join(", ");
+                return `Please fill in all mandatory fields.`;
+            }
+
+            // 2. Email Format Check
+            const sEmail = oRawData.email;
+            if (sEmail && (!sEmail.includes("@") || !sEmail.includes("."))) {
+                return "Please enter a valid email address (must contain @ and .).";
+            }
+
+            // 3. Phone Number Format Check (10 digits)
+            const sPhoneNumber = oRawData.phoneNumber;
+            const oPhoneRegex = /^\d{10}$/;
+            if (sPhoneNumber && !oPhoneRegex.test(sPhoneNumber.trim())) {
+                return "Please enter a valid 10-digit phone number.";
+            }
+
+            return null; // All validation passed
+        },
+
+        /**
+         * Utility to convert Date/string to YYYY-MM-DD format for CAP.
+         * @param {Date|string} sDateValue - The date value.
+         * @returns {string|null} The date in 'YYYY-MM-DD' format or null.
+         */
         _formatDateToISO: function (sDateValue) {
-            if (!sDateValue) {
-                return null;
-            }
-            let oDate = sDateValue;
-            if (typeof sDateValue === 'string') {
-                oDate = new Date(sDateValue);
-            }
+            if (!sDateValue) return null;
+
+            const oDate = sDateValue instanceof Date
+                ? sDateValue
+                : (typeof sDateValue === 'string' ? new Date(sDateValue) : null);
 
             if (oDate instanceof Date && !isNaN(oDate)) {
-                const year = oDate.getFullYear();
-                const month = String(oDate.getMonth() + 1).padStart(2, '0');
-                const day = String(oDate.getDate()).padStart(2, '0');
-
-                return `${year}-${month}-${day}`;
+                // Format as YYYY-MM-DD
+                return oDate.toISOString().split('T')[0];
             }
+            // Return original value if it wasn't a parsable date (shouldn't happen with DatePicker)
             return sDateValue;
         },
 
+        /**
+         * Utility to execute the API call using native fetch.
+         * @param {string} sActionName - The CAP action name (e.g., 'addStudent').
+         * @param {object} oPayload - The request body payload.
+         */
+        _executeApiCall: async function (sActionName, oPayload) {
+            const sUrl = `${SERVICE_ROOT}/${sActionName}`;
 
-        onRowPress: function (oEvent) {
-            const oSelectedItem = oEvent.getParameter("listItem");
-            if (!oSelectedItem) return;
+            const response = await fetch(sUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(oPayload)
+            });
 
-            const oPanel = this.byId("detailPanel"); // Assuming your detail panel ID
-            const oContext = oSelectedItem.getBindingContext();
-            const sStudentID = oContext.getProperty("studentID");
-
-            // Toggle visibility logic
-            if (oPanel.getVisible() && this._lastSelectedID === sStudentID) {
-                oPanel.setVisible(false);
-                this._lastSelectedID = null;
-                return;
+            if (!response.ok) {
+                let errorMessage = `${sActionName} failed. ${response.statusText}`;
+                try {
+                    // Try to parse error message from JSON response body
+                    const errorData = await response.json();
+                    errorMessage = errorData?.error?.message || errorMessage;
+                } catch (e) {
+                    // If parsing fails, use the plain text response if available
+                    const responseText = await response.text();
+                    errorMessage = responseText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
-            // Element Binding: Bind the panel to the selected item's context
-            oPanel.setBindingContext(oContext);
-            oPanel.setVisible(true);
-            this._lastSelectedID = sStudentID;
+            // Return response object for further use if needed (e.g., getting a response body)
+            return response;
+        },
+
+        /**
+         * Cleans up the temporary JSON Model.
+         */
+        _destroyTempModel: function () {
+            const oTempModel = this.getView().getModel("temp");
+            if (oTempModel) {
+                oTempModel.destroy();
+                this.getView().setModel(null, "temp");
+            }
+        },
+
+        /**
+         * Displays a confirmation dialog for deletion.
+         */
+        _confirmDeletion: (sName, sID) => {
+            return new Promise((resolve) => {
+                MessageBox.confirm(
+                    `Delete student: ${sName} (${sID})?`,
+                    {
+                        title: "Confirm Deletion",
+                        actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+                        emphasizedAction: MessageBox.Action.OK,
+                        onClose: (sAction) => resolve(sAction === MessageBox.Action.OK)
+                    }
+                );
+            });
         }
     });
 });
