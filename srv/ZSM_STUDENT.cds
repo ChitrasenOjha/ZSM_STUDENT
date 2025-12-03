@@ -24,7 +24,6 @@ service z_service_students {
 
     // Custom action to add a student
     action addStudent(student: StudentInput) returns String;
-    
     action deleteStudent(student: StudentInput) returns String;
     action updateStudent(student: StudentInput) returns String;
 }
